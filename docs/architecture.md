@@ -5,7 +5,7 @@ L’agent s’exécute dans **Microsoft 365 Copilot** / **Teams** (expérience L
 
 ## Schéma (Mermaid)
 
-```mermaid
+`mermaid
 flowchart LR
     U[Utilisateur M365/Teams] -->|Prompt| A[Agent FAQ Interne (Lite)]
     subgraph M365 Copilot Runtime
