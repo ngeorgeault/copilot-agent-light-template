@@ -7,28 +7,30 @@ Ce dossier regroupe la documentation de référence pour les agents Lite :
 - `glossary.md` – vocabulaire normalisé (FR‑CA).
 
 # Structure de dépôt
+
+```plaintext
 copilot-agents/
 ├─ agents/
 │  └─ agent-faq-interne/
-│     ├─ manifest.json                    # PROD (valide JSON)
-│     ├─ manifest.template.jsonc          # Commenté pour les rédacteurs
-│     ├─ declarativeAgent_0.json          # PROD (valide JSON)
-│     ├─ declarativeAgent_0.template.jsonc# Commenté pour les rédacteurs
+│     ├─ manifest.json                    # Fichier manifeste (production)
+│     ├─ manifest.template.jsonc          # Modèle commenté pour les rédacteurs
+│     ├─ declarativeAgent_0.json          # Fichier agent (production)
+│     ├─ declarativeAgent_0.template.jsonc# Modèle commenté pour les rédacteurs
 │     └─ assets/
 │        └─ icons/
-│           ├─ icon-color.png             # 192×192 recommandé (PNG, fond transparent)
-│           └─ icon-outline.png           # 32×32 recommandé (PNG, fond transparent)
+│           ├─ icon-color.png             # Icône couleur (PNG, fond transparent)
+│           └─ icon-outline.png           # Icône contour (PNG, fond transparent)
 ├─ docs/
-│  ├─ implementation.md
-│  ├─ architecture.md
-│  ├─ knowledge-sources.md
-│  ├─ governance-knowledge.md
-│  └─ glossary.md
+│  ├─ README.md                           # Documentation générale
+│  ├─ implementation.md                   # Guide d’implémentation
+│  ├─ architecture.md                     # Schéma d’architecture et flux
+│  ├─ knowledge-sources.md                # Inventaire des sources de connaissances
+│  ├─ governance-knowledge.md             # Plan de gouvernance des sources
+│  ├─ glossary.md                         # Glossaire des termes clés
+│  └─ notes-implementation.md             # Bonnes pratiques et recommandations
 ├─ scripts/
-│  ├─ validate-json.sh                    # Vérification JSON (jq)
-│  └─ lint-manifest.js                    # Règles Lite (longueurs nom/desc/instructions)
-├─ .github/
-│  └─ workflows/
-│     └─ validate.yml                     # CI: validation JSON + lint longueur Lite
-├─ README.md
-└─ LICENCE.md
+│  ├─ validate-json.sh                    # Script de validation JSON
+│  └─ lint-manifest.js                    # Script de contrôle des longueurs Lite
+└─ .github/
+   └─ workflows/
+      └─ validate.yml                     # Workflow CI pour validation et lint
