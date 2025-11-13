@@ -1,0 +1,22 @@
+name: Validate Agents (Lite)
+on:
+  push:
+    paths:
+      - "agents/**.json"
+      - "scripts/**"
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq & node
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          node -v || true
+      - name: Validate JSON syntax
+        run: |
+          find agents -name "*.json" -type f -print0 | xargs -0 -I{} sh -c 'jq . {} > /dev/null'
+      - name: Lint Lite lengths
+        run: node scripts/lint-manifest.js
