@@ -21,7 +21,6 @@ copilot-agents/
 │           ├─ icon-color.png             # Icône couleur (PNG, fond transparent)
 │           └─ icon-outline.png           # Icône contour (PNG, fond transparent)
 ├─ docs/
-│  ├─ README.md                           # Documentation générale
 │  ├─ implementation.md                   # Guide d’implémentation
 │  ├─ architecture.md                     # Schéma d’architecture et flux
 │  ├─ knowledge-sources.md                # Inventaire des sources de connaissances
@@ -31,6 +30,8 @@ copilot-agents/
 ├─ scripts/
 │  ├─ validate-json.sh                    # Script de validation JSON
 │  └─ lint-manifest.js                    # Script de contrôle des longueurs Lite
-└─ .github/
-   └─ workflows/
-      └─ validate.yml                     # Workflow CI pour validation et lint
+├─ .github/
+│  └─ workflows/
+│     └─ validate.yml                     # Workflow CI pour validation et lint
+├─ LICENCE.md                             # Fichier de licence MIT
+└─ README.md                              # Documentation générale
