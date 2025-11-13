@@ -1,1 +1,113 @@
-{...}
+{
+  "$schema": "https://schemas.microsoft.com/m365/copilot/agents/manifest/1.5",
+  // Version du schéma : alignez avec votre tenant si différent (1.3/1.4/1.5).
+
+  "id": "c5b1a5f3-3d0a-4a78-9f07-b0e8f9f0b111",
+  // GUID stable : conservez-le à travers dev→test→prod pour la traçabilité.
+
+  "name": {
+    "short": "Agent FAQ Interne",      // LITE : 30 caractères max (nom). Voir atelier et contraintes Lite. [1](https://afiformation1com-my.sharepoint.com/personal/nicolas_georgeault_afiexpertise_com/_layouts/15/Doc.aspx?sourcedoc=%7BC25922D1-8ED6-443B-B949-D436744A7B1A%7D&file=Atelier%201%20-%20Mise%20en%20place%20du%20framework%20des%20agents%20et%20id%C3%A9ation%20-%20Afi.pptx&action=edit&mobileredirect=true&DefaultItemOpen=1)
+    "full": "Agent FAQ Interne – Support aux employés"
+  },
+
+  "publisher": {
+    "name": "AFI par Edgenda Inc.",
+    "websiteUrl": "https://intranet/ai/agents/agent-faq-interne",
+    "privacyPolicyUrl": "https://intranet/policies/privacy",
+    "termsOfUseUrl": "https://intranet/policies/terms",
+    "supportEmail": "support-ai@entreprise.com",
+    "supportPortalUrl": "https://support/ai"
+  },
+
+  "version": "0.1.0",
+
+  "description": {
+    "short": "Répond aux questions internes (procédures, politiques, outils) en s’appuyant sur les sources M365 approuvées.",
+    // Bonne pratique : viser ~1 000 caractères pour la description (Lite). [1](https://afiformation1com-my.sharepoint.com/personal/nicolas_georgeault_afiexpertise_com/_layouts/15/Doc.aspx?sourcedoc=%7BC25922D1-8ED6-443B-B949-D436744A7B1A%7D&file=Atelier%201%20-%20Mise%20en%20place%20du%20framework%20des%20agents%20et%20id%C3%A9ation%20-%20Afi.pptx&action=edit&mobileredirect=true&DefaultItemOpen=1)
+    "full": "L’agent FAQ Interne aide les employés à retrouver rapidement l’information fiable (RH, TI, achats, sécurité) en recherchant dans SharePoint/OneDrive et pages intranet approuvées. Il cite ses sources, respecte les permissions M365 et propose l’escalade humaine si la confiance est faible."
+  },
+
+  "icons": {
+    "outline": "assets/icons/icon-outline.png", // PNG transparent, lisible clair/sombre (voir atelier). [2](https://afiformation1com-my.sharepoint.com/personal/nicolas_georgeault_afiexpertise_com/_layouts/15/Doc.aspx?sourcedoc=%7BC25922D1-8ED6-443B-B949-D436744A7B1A%7D&file=Atelier%201%20-%20Mise%20en%20place%20du%20framework%20des%20agents%20et%20id%C3%A9ation%20-%20Afi.pptx&action=edit&mobileredirect=true&DefaultItemOpen=1)
+    "color":   "assets/icons/icon-color.png"
+  },
+
+  "localizationInfo": {
+    "defaultLanguageTag": "fr-CA",
+    "additionalLanguages": ["en-US"]
+  },
+
+  "instructions": {
+    // LITE : Instructions 8 000 caractères max (atelier/limites). Restez concis pour éviter l’erreur runtime en addition avec le prompt utilisateur.
+    "format": "markdown",
+    "content": "## Rôle\n- Tu es l’agent « Agent FAQ Interne » pour le support aux employés (FR-CA). Style professionnel, concis, pas d’icônes ni d’emojis.\n\n## Stratégie\n1) Clarifie si ambigu (≤ 3 questions). 2) Réponds en citant les sources. 3) Propose un lien ou un outil quand c’est plus efficace. 4) Demande confirmation avant toute action à impact.\n\n## Sécurité\n- Respecte permissions M365/DLP/étiquettes. Pas de PII hors périmètre.\n\n## Outils autorisés\n- `Recherche_SP` (SharePoint ciblé), `Ticketing_Flow` (création de demande)."
+  },
+
+  "capabilities": {
+    "generativeAnswers": true,
+    "codeInterpreter": false,
+    "imageGenerator": false,
+    "enhancedSearch": true
+  },
+
+  "knowledge": {
+    "sources": [
+      { "type": "sharepoint", "scope": "library", "url": "https://<tenant>.sharepoint.com/sites/KBase/Shared%20Documents/Procedures" },
+      { "type": "web", "urls": ["https://intranet/faq","https://intranet/politiques"], "allowlistOnly": true }
+    ],
+    "indexing": { "refreshInterval": "P1D", "schedule": "0 2 * * *" }
+  },
+
+  "actions": [
+    {
+      "name": "Ticketing_Flow",
+      "type": "powerAutomate",
+      "description": "Crée un ticket interne (accès, matériel, demande RH).",
+      "inputs": [
+        { "name": "requesterUpn", "type": "string", "required": true },
+        { "name": "category", "type": "string", "required": true },
+        { "name": "justification", "type": "string", "required": true }
+      ],
+      "outputs": [
+        { "name": "ticketId", "type": "string" },
+        { "name": "url", "type": "string" }
+      ],
+      "userConfirmationRequired": true
+    },
+    {
+      "name": "Recherche_SP",
+      "type": "graphSearch",
+      "description": "Recherche dans la bibliothèque Procédures.",
+      "inputs": [{ "name": "query", "type": "string", "required": true }],
+      "outputs": [{ "name": "results", "type": "array" }]
+    }
+  ],
+
+  "permissions": {
+    "graph": ["Sites.Read.All"],
+    "connectors": [{ "name": "shared_sharepointonline", "scopes": ["Read"] }]
+  },
+
+  "governance": {
+    "sensitivityLabel": "Internal",
+    "dlpPolicy": "dlp-default",
+    "sharing": { "audience": "Internal", "editorRoleAllowed": true, "viewerRoleAllowed": true },
+    "budget": { "messageCapPerMonth": 10000, "alertThresholds": [0.8, 0.9] } // Pratique d’admin (caps par agent).
+  },
+
+  "channels": {
+    "m365Copilot": { "enabled": true },
+    "teams": { "enabled": true },
+    "web": { "enabled": false }
+  },
+
+  "telemetry": {
+    "enabled": true,
+    "export": { "conversationTranscripts": false, "aggregates": true },
+    "kpis": [
+      { "name": "ResponseWithCitationRate", "target": 0.9 },
+      { "name": "AvgFirstTokenLatencyMs", "target": 3000 },
+      { "name": "HumanEscalationRate", "target": 0.1 }
+    ]
+  }
+}
