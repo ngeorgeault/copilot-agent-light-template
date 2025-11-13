@@ -1,1 +1,56 @@
-{...}
+{
+  "$schema": "https://schemas.contoso.ai/agents/declarativeAgent_0.schema.json",
+  "id": "f2db6c35-5fe1-4e1f-8a3a-2b0aa9b3a3c2",
+  "name": "Agent FAQ Interne",
+  "version": "0.1.0",
+  "lifecycle": { "stage": "pilot", "reviewDate": "2026-01-31" },
+  "ownership": {
+    "productOwner": { "name": "Prénom Nom", "email": "po@entreprise.com" },
+    "technicalOwner": { "name": "Tech Lead", "email": "tech@entreprise.com" },
+    "support": {
+      "runbookUrl": "https://intranet/runbooks/agent-faq-interne",
+      "supportPortalUrl": "https://support/ai",
+      "onCall": { "team": "Ops-AI", "hours": "24/7", "timezone": "America/Toronto" }
+    },
+    "usefulLinks": {
+      "documentation": "https://intranet/ai/agents/agent-faq-interne",
+      "designDoc": "https://intranet/ai/adr/agent-faq-interne",
+      "privacyImpactAssessment": "https://intranet/ai/pia/agent-faq-interne"
+    }
+  },
+  "description": "Agent de support interne qui répond aux questions fréquentes des employés à partir de sources approuvées (SharePoint, intranet) et propose l’escalade humaine lorsque la confiance est faible.",
+  "instructions": [
+    "## Rôle & Objectifs",
+    "- Tu es l’agent 'Agent FAQ Interne' et aides les employés à trouver des informations fiables.",
+    "## Ton & Style",
+    "- Professionnel, concis, FR‑CA, sans icônes ni emojis. Structure par titres/listes.",
+    "## Stratégie",
+    "1) Clarifie si ambigu (≤3 questions). 2) Cherche d’abord dans les sources approuvées. 3) Cite les sources. 4) Pour action à impact, demande confirmation.",
+    "## Outils autorisés",
+    "- `Recherche_SP`, `Ticketing_Flow` uniquement.",
+    "## Sécurité",
+    "- Respecte DLP/étiquettes/permissions. Aucune PII hors périmètre.",
+    "## Gestion des erreurs",
+    "- Explique brièvement et propose une alternative (formulaire, contact)."
+  ],
+  "knowledge": {
+    "sources": [
+      { "type": "sharepoint", "url": "https://<tenant>.sharepoint.com/sites/KBase/Shared%20Documents/Procedures" },
+      { "type": "web", "urls": ["https://intranet/faq", "https://intranet/politiques"] }
+    ],
+    "indexing": { "refresh": "P1D", "maxAgeMonths": 18, "fileTypes": ["pdf", "docx", "pptx", "html"] }
+  },
+  "capabilities": { "codeInterpreter": false, "imageGenerator": false, "enhancedSearch": true },
+  "tools": [
+    { "name": "Ticketing_Flow", "type": "powerAutomate", "needsUserConsent": true },
+    { "name": "Recherche_SP", "type": "graphConnector" }
+  ],
+  "operations": {
+    "kpis": [
+      { "name": "ResponseWithCitationRate", "target": 0.9 },
+      { "name": "HumanEscalationRate", "target": 0.1 }
+    ],
+    "evaluation": { "testSets": "https://intranet/ai/tests/agent-faq-interne" }
+  },
+  "channels": { "m365Copilot": { "enabled": true }, "teams": { "enabled": true } }
+}
