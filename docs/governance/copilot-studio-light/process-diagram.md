@@ -1,140 +1,45 @@
 # Diagramme : Processus opérationnel — Agents Copilot Studio Light
 
-Ce document contient un diagramme Mermaid qui illustre les étapes du processus opérationnel (point 3) et référence les pages détaillées dans ce répertoire.
+---
+config:
+  layout: dagre
+---
+
+Ce diagramme illustre le cycle de vie d'un agent Copilot Studio Light depuis la conception jusqu'à la publication et la mise en production. Les étapes correspondent à des pages détaillées dans ce répertoire.
 
 ```mermaid
+---
+config:
+  layout: dagre
+---
 flowchart LR
-   A["Étape 0<br>Création libre"] --> B["Étape 1<br>Soumission via Microsoft Forms"]
-   B --> C["Étape 2<br>Évaluation admin / sécurité"]
-   C --> D["Étape 3<br>Publication\n(Applications Intégrées M365)"]
-   D --> E["Étape 4<br>Opérations &amp; maintenance"]
-```
-# Diagramme détaillé
-
-```mermaid
-flowchart LR
-
-    %% ================================
-    %% Phase 1 - Conception de l’agent
-    %% ================================
-
-    subgraph PH1["Phase 1 - Conception dans Microsoft 365 Copilot"]
-        U1["1. Utilisateur Microsoft 365
-(créer un agent depuis Copilot Chat)"]
-        A2["2. Agent Copilot Studio Light
-(modèle d’agent déclaratif)"]
-    end
-
-    %% Boucle d’amélioration continue entre l’utilisateur et l’agent
-    U1 -->|"Création et test de l’agent"| A2
-    A2 -->|"Feedback et amélioration continue
-des instructions"| U1
-
-    %% Commentaires sur les paramètres de l’agent déclaratif :
-    %% Paramètres :
-    %% - Icône : PNG, fond transparent recommandé, taille max ~1 Mo, résolution raisonnable (ex. 128x128 ou 192x192 px).
-    %% - Nom : clair, unique dans le tenant, longueur courte (typiquement <= 30–40 caractères).
-    %% - Description : expliquer le but de l’agent, contexte, public cible, longueur recommandée <= 1 000 caractères.
-    %% - Instructions : décrire le comportement attendu, le ton, les limites et les tâches de l’agent, longueur max ~8 000 caractères.
-    %% - Sources de connaissance : documents et sites validés (SharePoint, web, etc.), nombre et taille à limiter pour garder la pertinence.
-    %% - Requêtes de démarrage : quelques exemples de prompts guidés, pas obligatoire, mais fortement recommandé pour cadrer l’usage.
-
-    %% ================================
-    %% Étape 3 - Export de l’agent
-    %% ================================
-
-    E3["3. Export de l’agent au format ZIP
-(depuis l’interface Copilot / Studio Light)"]
-    A2 --> E3
-
-    %% ================================
-    %% Étape 4 - Soumission via Microsoft Forms
-    %% ================================
-
-    F4["4. Soumission du fichier ZIP
-par l’utilisateur via Microsoft Forms
-(formulaire de déclaration d’agent)"]
-    E3 --> F4
-
-    %% ================================
-    %% Étape 5 - Power Automate + SharePoint
-    %% ================================
-
-    P5["5. Flux Power Automate
-(création/maj dans SharePoint
-+ courriels à l’utilisateur et aux admins)"]
-    SP5["Liste SharePoint
-(Catalogue des agents)"]
-
-    F4 --> P5
-    P5 --> SP5
-
-    %% ================================
-    %% Étape 6 - Révision admin
-    %% ================================
-
-    ADM6["6. Administrateurs M365 / CoE
-révisent et complètent les informations
-(métadonnées, conformité, gouvernance)"]
-    SP5 --> ADM6
+ subgraph PH1["Phase 1 - Conception dans Microsoft 365 Copilot"]
+        U1["1. Utilisateur Microsoft 365\n(créer un agent depuis Copilot Chat)"]
+        A2["2. Agent Copilot Studio Light\n(modèle d’agent déclaratif)"]
+  end
+    U1 -- Création et test de l’agent --> A2
+    A2 -- Feedback et amélioration continue\ndes instructions --> U1
+    A2 --> E3["3. Export de l’agent au format ZIP\n(depuis l’interface Copilot / Studio Light)"]
+    E3 --> F4["4. Soumission du fichier ZIP\npar l’utilisateur via Microsoft Forms\n(formulaire de déclaration d’agent)"]
+    F4 --> P5["5. Flux Power Automate\n(création/maj dans SharePoint\n+ courriels à l’utilisateur et aux admins)"]
+    P5 --> SP5["Liste SharePoint\n(Catalogue des agents)"]
+    SP5 --> ADM6["6. Administrateurs M365 / CoE\nrévisent et complètent les informations\n(métadonnées, conformité, gouvernance)"]
     ADM6 --> SP5
-
-    %% ================================
-    %% Étape 7 - Repo GitHub
-    %% ================================
-
-    G7["7. Repo GitHub (modèle d’agent)
-création ou mise à jour :
-README, fiche agent, instructions,
-CHANGELOG, fichiers de configuration"]
-    ADM6 --> G7
-
-    %% ================================
-    %% Étape 8 - Bloc d’instructions entreprise
-    %% ================================
-
-    I8["8. Ajout du bloc d’instructions
-standard de l’entreprise
-(aux instructions initiales)"]
-    G7 --> I8
-
-    %% ================================
-    %% Étape 9 - Publication depuis M365
-    %% ================================
-
-    PUB9["9. Publication de l’agent
-depuis le Centre d’administration M365
-(menu Applications intégrées)"]
-    I8 --> PUB9
-
-    %% ================================
-    %% Étape 10 - Mise à jour finale
-    %% ================================
-
-    P10["10. Mise à jour de la liste SharePoint
-avec les détails de l’agent publié
-+ Power Automate : courriel à l’utilisateur"]
-    PUB9 --> P10
+    ADM6 --> G7["7. Repo GitHub (modèle d’agent)\ncréation ou mise à jour :\nREADME, fiche agent, instructions,\nCHANGELOG, fichiers de configuration"]
+    G7 --> I8["8. Ajout du bloc d’instructions\nstandard de l’entreprise\n(aux instructions initiales)"]
+    I8 --> PUB9["9. Publication de l’agent\ndepuis le Centre d’administration M365\n(menu Applications intégrées)"]
+    PUB9 --> P10["10. Mise à jour de la liste SharePoint\navec les détails de l’agent publié\n+ Power Automate : courriel à l’utilisateur"]
     P10 --> SP5
 ```
 
-Pages détaillées (liens relatifs dans le dépôt)
-- Étape 0 — Création libre  
-  docs/governance/copilot-studio-light/step-0-creation.md  
-  https://github.com/ngeorgeault/copilot-agent-light-template/blob/main/docs/governance/copilot-studio-light/step-0-creation.md
-
-- Étape 1 — Soumission via Microsoft Forms  
-  docs/governance/copilot-studio-light/step-1-submission.md  
-  https://github.com/ngeorgeault/copilot-agent-light-template/blob/main/docs/governance/copilot-studio-light/step-1-submission.md
-
-- Étape 2 — Évaluation admin / sécurité  
-  docs/governance/copilot-studio-light/step-2-evaluation.md  
-  https://github.com/ngeorgeault/copilot-agent-light-template/blob/main/docs/governance/copilot-studio-light/step-2-evaluation.md
-
-- Étape 3 — Publication (Integrated App)  
-  docs/governance/copilot-studio-light/step-3-publication.md  
-  https://github.com/ngeorgeault/copilot-agent-light-template/blob/main/docs/governance/copilot-studio-light/step-3-publication.md
-
-- Étape 4 — Opérations & maintenance  
-  docs/governance/copilot-studio-light/step-4-operations.md  
-  https://github.com/ngeorgeault/copilot-agent-light-template/blob/main/docs/governance/copilot-studio-light/step-4-operations.md
+Pages détaillées (liens relatifs) :
+- 1. docs/governance/copilot-studio-light/step-1-user-creation.md
+- 2. docs/governance/copilot-studio-light/step-2-agent-model.md
+- 3. docs/governance/copilot-studio-light/step-3-export-zip.md
+- 4. docs/governance/copilot-studio-light/step-4-forms-submission.md
+- 5. docs/governance/copilot-studio-light/step-5-power-automate.md
+- 6. docs/governance/copilot-studio-light/step-6-admin-review.md
+- 7. docs/governance/copilot-studio-light/step-7-github-repo.md
+- 8. docs/governance/copilot-studio-light/step-8-standard-instructions.md
+- 9. docs/governance/copilot-studio-light/step-9-publication.md
+- 10. docs/governance/copilot-studio-light/step-10-post-publish.md
