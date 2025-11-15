@@ -1,0 +1,146 @@
+# Power Automate — Flow : Ingestion des soumissions Forms -> SharePoint -> Approvals -> Publication
+# Description: Flux détaillé (YAML descriptif) ; remplacez {placeholders} par vos IDs et URLs.
+
+flow:
+  name: "CopilotStudioLight_Submissions_Workflow"
+  trigger:
+    type: "When a new response is submitted"
+    connector: "Microsoft Forms"
+    settings:
+      formId: "{Forms_FormId_Submission}"
+  actions:
+    - name: "Get_response_details"
+      type: "Get response details"
+      connector: "Microsoft Forms"
+      inputs:
+        formId: "{Forms_FormId_Submission}"
+        responseId: "@triggerBody()?['responseId']"
+    - name: "Extract_attachment_metadata"
+      type: "Compose"
+      description: "Extraire le lien / nom du fichier joint (Forms returns an attachment JSON)."
+      expression: "body('Get_response_details')?['AgentZip']"
+    - name: "Create_file_in_library"
+      type: "Create file"
+      connector: "SharePoint"
+      inputs:
+        siteAddress: "{SharePointSiteURL}"
+        folderPath: "/Agent-ZIP-Files"
+        fileName: "@{outputs('Extract_attachment_metadata')?['name']}"
+        fileContent: "@{body('Get_attachment_content')}" # voir note : obtenir le contenu du fichier via l'endpoint Forms/SharePoint
+    - name: "Create_item_submission"
+      type: "Create item"
+      connector: "SharePoint"
+      inputs:
+        siteAddress: "{SharePointSiteURL}"
+        listName: "Agents-Copilot-Light-Submissions"
+        fields:
+          Title: "@{body('Get_response_details')?['Title']}"
+          DescriptionShort: "@{body('Get_response_details')?['DescriptionShort']}"
+          PO: "@{body('Get_response_details')?['ProductOwner']}"
+          TechnicalOwner: "@{body('Get_response_details')?['TechnicalOwner']}"
+          SourcesConnaissance: "@{body('Get_response_details')?['KnowledgeSources']}"
+          DonneesSensibles: "@{body('Get_response_details')?['ContainsPII']}"
+          PIIDetails: "@{body('Get_response_details')?['PIIDetails']}"
+          ConnecteursExterieurs: "@{body('Get_response_details')?['ExternalConnectors']}"
+          PermissionsDemandees: "@{body('Get_response_details')?['RequestedPermissions']}"
+          PublicCible: "@{body('Get_response_details')?['TargetAudience']}"
+          ClassificationAdmin: "@{body('Get_response_details')?['RequestedClassification']}"
+          Statut: "Submitted"
+          LienPublicationApp: "@{concat('{SharePointSiteURL}','/Agent-ZIP-Files/', outputs('Extract_attachment_metadata')?['name'])}"
+    - name: "Scan_manifest_and_prompts"
+      type: "Apply to each"
+      description: "Optionnel : unpack manifest.json from ZIP and scan for external endpoints / suspicious patterns."
+      inputs:
+        value: "@{outputs('Create_file_in_library')?['Id']}"
+      subactions:
+        - name: "Call_AzureFunction_ScanZip"
+          type: "HTTP"
+          connector: "HTTP"
+          inputs:
+            method: "POST"
+            uri: "{AzureFunctionURL}/scan-zip"
+            body:
+              fileId: "@{items('Apply_to_each')}"
+          outputs:
+            scanResult: "@body('Call_AzureFunction_ScanZip')"
+    - name: "Start_approval"
+      type: "Start and wait for an approval"
+      connector: "Approvals"
+      inputs:
+        approvalType: "Approve/Reject – First to respond"
+        title: "Validation soumission agent: @{body('Get_response_details')?['Title']}"
+        assignedTo: "{ApproverEmails}"
+        details: |
+          Titre: @{body('Get_response_details')?['Title']}
+          PO: @{body('Get_response_details')?['ProductOwner']}
+          Lien ZIP: @{concat('{SharePointSiteURL}','/Agent-ZIP-Files/', outputs('Extract_attachment_metadata')?['name'])}
+          Résumé: @{body('Get_response_details')?['DescriptionShort']}
+        itemLink: "@{concat('{SharePointSiteURL}','/Lists/Agents-Copilot-Light-Submissions/DispForm.aspx?ID=', outputs('Create_item_submission')?['ID'])}"
+    - name: "Condition_approval"
+      type: "Condition"
+      expression: "@equals(body('Start_approval')?['outcome'], 'Approve')"
+      ifTrue:
+        - name: "Update_item_approved"
+          type: "Update item"
+          connector: "SharePoint"
+          inputs:
+            siteAddress: "{SharePointSiteURL}"
+            listName: "Agents-Copilot-Light-Submissions"
+            id: "@{outputs('Create_item_submission')?['ID']}"
+            fields:
+              Statut: "Approved"
+              ClassificationAdmin: "@{body('Start_approval')?['response']['classification'] ?? ''}"
+              DateEvaluation: "@utcNow()"
+        - name: "Notify_PO_approved"
+          type: "Send an email (V2)"
+          connector: "Office 365 Outlook"
+          inputs:
+            To: "@{body('Get_response_details')?['ProductOwner']}"
+            Subject: "Soumission agent approuvée: @{body('Get_response_details')?['Title']}"
+            Body: "Votre agent a été approuvé et peut être publié par l'administrateur M365."
+      ifFalse:
+        - name: "Update_item_rejected"
+          type: "Update item"
+          connector: "SharePoint"
+          inputs:
+            siteAddress: "{SharePointSiteURL}"
+            listName: "Agents-Copilot-Light-Submissions"
+            id: "@{outputs('Create_item_submission')?['ID']}"
+            fields:
+              Statut: "Rejected"
+              CommentairesAdmin: "@{body('Start_approval')?['comments']}"
+              DateEvaluation: "@utcNow()"
+        - name: "Notify_PO_rejected"
+          type: "Send an email (V2)"
+          connector: "Office 365 Outlook"
+          inputs:
+            To: "@{body('Get_response_details')?['ProductOwner']}"
+            Subject: "Soumission agent rejetée: @{body('Get_response_details')?['Title']}"
+            Body: "La soumission a été rejetée. Commentaires: @{body('Start_approval')?['comments']}"
+    - name: "Post_approval_actions"
+      type: "Scope"
+      description: "Actions supplémentaires : journalisation, ticketing, documentation."
+      actions:
+        - name: "Log_event"
+          type: "Create item"
+          connector: "SharePoint"
+          inputs:
+            siteAddress: "{SharePointSiteURL}"
+            listName: "Agent-Audit-Log"
+            fields:
+              Title: "Submission @{outputs('Create_item_submission')?['ID']} - @{body('Start_approval')?['outcome']}"
+              Details: "@{json(string(body('Start_approval')))}"
+        - name: "Notify_Admins_publish"
+          type: "Send an email (V2)"
+          connector: "Office 365 Outlook"
+          inputs:
+            To: "{AdminPublishingMailbox}"
+            Subject: "Agent prêt pour publication: @{body('Get_response_details')?['Title']}"
+            Body: "Un agent a été approuvé et est prêt pour publication. Voir: @{concat('{SharePointSiteURL}','/Lists/Agents-Copilot-Light-Submissions/DispForm.aspx?ID=', outputs('Create_item_submission')?['ID'])}"
+  notes:
+    - "Remplacez {Forms_FormId_Submission}, {SharePointSiteURL}, {ApproverEmails}, {AzureFunctionURL}, {AdminPublishingMailbox} par vos valeurs."
+    - "Pour récupérer le contenu du fichier joint Forms, vous pouvez :"
+    - "  • Appeler l'API Microsoft Forms / SharePoint (selon stockage), ou"
+    - "  • Utiliser l'action 'Get file content' sur l'URL retournée par 'Get response details' (adapter selon la structure retournée par votre formulaire)."
+    - "Scanner le ZIP : idéalement via Azure Function dédiée (sécurité, extraction manifest, détection patterns)."
+    - "Le flux inclut la création d'un item dans Agents-Copilot-Light-Submissions et le dépôt du ZIP dans la bibliothèque Agent-ZIP-Files."
