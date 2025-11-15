@@ -1,4 +1,4 @@
-# Documentation – Agents Copilot Studio (Lite)
+# Documentation – Agents Copilot Studio (Lite/Full/Declaraive)
 Ce dossier regroupe la documentation de référence pour les agents Lite :
 - `implementation.md` – étapes d’implémentation & packaging.
 - `architecture.md` – schéma d’architecture et flux.
