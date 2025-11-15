@@ -4,10 +4,10 @@ Ce document contient un diagramme Mermaid qui illustre les étapes du processus 
 
 ```mermaid
 flowchart LR
-  A["Étape 0\nCréation libre"] --> B["Étape 1\nSoumission via Microsoft Forms"]
-  B --> C["Étape 2\nÉvaluation admin / sécurité"]
-  C --> D["Étape 3\nPublication\n(Applications Intégrées M365)"]
-  D --> E["Étape 4\nOpérations & maintenance"]
+   A["Étape 0<br>Création libre"] --> B["Étape 1<br>Soumission via Microsoft Forms"]
+   B --> C["Étape 2<br>Évaluation admin / sécurité"]
+   C --> D["Étape 3<br>Publication\n(Applications Intégrées M365)"]
+   D --> E["Étape 4<br>Opérations &amp; maintenance"]
 ```
 
 Pages détaillées (liens relatifs dans le dépôt)
